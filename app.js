@@ -63,6 +63,8 @@ app.get('/fail',(req,res)=>{
     res.json({msg:':('});
 });
 
+
+
 app.post('/signup',(req,res)=>{
     user.register(new user({
         username: req.body.username,
@@ -98,6 +100,12 @@ app.get('/allnames',(req,res)=>{
         if(err){res.json({'status':'0'})}
         else{res.json({'users':dbres});}
     });
+});
+
+
+app.get('/',(req,res)=>{
+    console.log('hiii');
+    res.send('hi');
 });
 
 app.listen(2000,()=>{
