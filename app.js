@@ -5,7 +5,7 @@ var express = require('express'),
     session = require('express-session'),
     localStrategy = require ('passport-local'),
     user = require('./user'),
-    discoId = require('./uidSchema'),
+    discoId = require('./discoId'),
     server = require('http').createServer(),
     socket = require('socket.io'),
     io = socket(server);
@@ -60,7 +60,7 @@ io.on('connection', (socket)=>{
 });
 
 app.get('/fail',(req,res)=>{
-    res.json({msg:':('});
+    res.json({'user':'0'});
 });
 
 
@@ -69,6 +69,8 @@ app.post('/signup',(req,res)=>{
     user.register(new user({
         username: req.body.username,
         email: req.body.email,
+        accountCreation: req.body.accountCreation,
+        private: true
     }),req.body.password,function(err,user){
         if(err){
             console.log('sign up error');
@@ -85,15 +87,30 @@ app.post('/signup',(req,res)=>{
     });
 });
 
-app.post('/signin',passport.authenticate('local'),(req,res)=>{
+app.post('/signin',passport.authenticate('local',{failureRedirect : '/fail'}),(req,res)=>{
     discoId.findOne({username:req.user.username},function(err,dbres){
         if(err)res.json({'user':err});
         else {
-        res.json({'user':dbres});
+            user.findOne({username:req.user.username},function(err,dbres2){
+                if(err){res.json({'user':err})}
+                else{
+                    var user = {
+                        'email': dbres2.email,
+                        'userId': dbres2._id,
+                        'userName': dbres2.username,
+                        'discoId': dbres._id,
+                        'uid': dbres.uid
+                    }
+                    res.json({'user':user})
+                }
+            });
+        //res.json({'user':dbres});
     }
     });
     //res.json({'user':req.user.username});
 });
+
+
 
 app.get('/allnames',(req,res)=>{
     discoId.find({},function(err,dbres){

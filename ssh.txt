@@ -1,2 +1,2 @@
-ssh nccsshahzad@13.75.117.16
+ssh nccsshahzad@13.75.67.46
 Nccs_uop1password
