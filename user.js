@@ -3,11 +3,9 @@ var passportlocal = require('passport-local-mongoose');
 var user = new mongoose.Schema({
     username : {type:String, unique:true},
     email : {type:String, unique:true},
+    number : {type:String, unique:true},
     password : String,
-    private : Boolean,
-    imageUrl : String,
-    accountCreation : String,
-    lastActive : String
+    verified : Boolean
 });
 
 user.plugin(passportlocal);

@@ -63,51 +63,70 @@ app.get('/fail',(req,res)=>{
     res.json({'user':'0'});
 });
 
+
+
 app.post('/signup',(req,res)=>{
     user.register(new user({
         username: req.body.username,
-        email: req.body.email
+        email: req.body.email,
+        accountCreation: req.body.accountCreation,
+        private: false
     }),req.body.password,function(err,user){
         if(err){
             console.log('sign up error');
             res.json({'error':err.message ? err.message : err.errmsg});
         }
         else{
-        res.json({'user':user});
+        //res.json({'user':user});
+        console.log('i m in else');
+        discoId.create({uid:req.body.uid, username : req.body.username},function(err,dbres){
+            if(err){res.json({'error':err.errmsg?err.errmsg:err.message});}
+            else res.json({'user':dbres});
+        });
     }
     });
 });
 
-app.post('/signin',(req,res)=>{
-    req.body.username
-    user.find({username:req.body.username},function(err,dbres){
-        if(err)res.json({'user':'u r fucked'});
+app.post('/signin',passport.authenticate('local',{failureRedirect : '/fail'}),(req,res)=>{
+    discoId.findOne({username:req.user.username},function(err,dbres){
+        if(err)res.json({'user':err});
         else {
-            if(dbres.length==0)
-            {
-                user.create({username:req.body.username,number:req.body.number},function(err,dbres2){
-                    if(err)res.json({'user':err});
-                    else res.json({'user':dbres2});
-                    return;
-                });
-            }
-        }
-        res.json({'user':dbres});
+            user.findOne({username:req.user.username},function(err,dbres2){
+                if(err){res.json({'user':err})}
+                else{
+                    var user = {
+                        'email': dbres2.email,
+                        'userId': dbres2._id,
+                        'userName': dbres2.username,
+                        'discoId': dbres._id,
+                        'uid': dbres.uid
+                    }
+                    res.json({'user':user})
+                }
+            });
+        //res.json({'user':dbres});
+    }
     });
+    //res.json({'user':req.user.username});
 });
 
-app.get('/check',(req,res)=>{
-    console.log(Math.random(2));
+app.post('/friendRequest',(req,res)=>{
+    
 });
 
-app.post('/checkName',(req,res)=>{
-    user.find({username:req.body.username},function(err,dbres){
-        if(err)res.json({'status':0});
+app.post('/allnames',(req,res)=>{
+    if(req.body.userId==undefined){res.json({'status':'id is missing'}); return;}
+    user.find({private:false},function(err,dbres){
+        if(err){res.json({'status':'0'})}
         else{
-            if(dbres.length==0){res.json({'status':1});}
-            else res.json({'status':0});
-        }
+            res.json({'users':dbres.filter(f=>f._id!=req.body.userId)});}
     });
+});
+
+
+app.get('/',(req,res)=>{
+    console.log('hiii');
+    res.send('hi');
 });
 
 app.listen(2000,()=>{
