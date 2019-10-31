@@ -1,3 +1,4 @@
 # Dependency directories
 node_modules/
 ssh.txt
+package-lock.json
