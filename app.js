@@ -2,7 +2,6 @@ var express = require('express'),
     mongoose = require('mongoose'),
     bodyParser = require('body-parser'),
     user = require('./user'),
-    discoId = require('./discoId'),
     server = require('http').createServer(),
     socket = require('socket.io'),
     io = socket(server);
