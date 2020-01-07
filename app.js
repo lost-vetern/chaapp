@@ -1,9 +1,6 @@
 var express = require('express'),
     mongoose = require('mongoose'),
     bodyParser = require('body-parser'),
-    passport = require('passport'),
-    session = require('express-session'),
-    localStrategy = require ('passport-local'),
     user = require('./user'),
     discoId = require('./discoId'),
     server = require('http').createServer(),
@@ -16,16 +13,7 @@ app.set('view engine','ejs');
 //body parsing
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());
-//express session
-app.use(session({secret : 'topsecreat' , resave : false, saveUninitialized : false}));
-//passport init and session
-app.use(passport.initialize());
-app.use(passport.session());
-//strategies 
-passport.use(new localStrategy(user.authenticate()));
-//passport serialize and deserialize
-passport.serializeUser(user.serializeUser());
-passport.deserializeUser(user.deserializeUser());
+
 //mongoose connection
 mongoose.connect('mongodb://localhost:27017/chaapp');
 
@@ -43,9 +31,10 @@ io.on('connection', (socket)=>{
     console.log('user connected'+socket.id);
     //disconnect
     socket.on('disconnect', function(){
+        delete clients[socket.nickname];
         console.log('user disconnected');
       });
-
+      ///add user
       socket.on('add-user', function(data){
             socket.nickname = data.username;
             clients[data.username]=socket.id;
@@ -64,35 +53,24 @@ app.get('/fail',(req,res)=>{
 });
 
 app.post('/signup',(req,res)=>{
-    user.register(new user({
-        username: req.body.username,
-        email: req.body.email
-    }),req.body.password,function(err,user){
-        if(err){
-            console.log('sign up error');
-            res.json({'error':err.message ? err.message : err.errmsg});
-        }
-        else{
-        res.json({'user':user});
-    }
+    user.create({
+        chaappId:req.body.chaappId,
+        email:req.body.email,
+        authId:req.body.authId,
+        imageUrl: req.body.imageUrl,
+        active:true
+    },function(err,dbres){
+        if(err)res.json({status:0 , res:err});
+        else res.json({status: 1, res:dbres});
     });
 });
 
-app.post('/signin',(req,res)=>{
-    req.body.username
-    user.find({username:req.body.username},function(err,dbres){
-        if(err)res.json({'user':'u r fucked'});
-        else {
-            if(dbres.length==0)
-            {
-                user.create({username:req.body.username,number:req.body.number},function(err,dbres2){
-                    if(err)res.json({'user':err});
-                    else res.json({'user':dbres2});
-                    return;
-                });
-            }
-        }
-        res.json({'user':dbres});
+///change chaappId
+app.post('/changeId',(req,res)=>{
+    user.updateOne({authId:req.body.authId},{$set:{chaappId:req.body.chaappId}},
+        function(err,dbres){
+        if(err)res.json({status:0,res:err});
+        else res.json({status:1,res:dbres});
     });
 });
 

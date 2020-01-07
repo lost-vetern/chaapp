@@ -1,12 +1,10 @@
 var mongoose = require('mongoose');
-var passportlocal = require('passport-local-mongoose');
-var user = new mongoose.Schema({
-    username : {type:String, unique:true},
-    email : {type:String, unique:true},
-    number : {type:String, unique:true},
-    password : String,
-    verified : Boolean
-});
 
-user.plugin(passportlocal);
+var user = new mongoose.Schema({
+    chaappId : {type:String, unique:true},
+    email : {type:String},
+    authId : {type:String, unique:true},//We will send googleid or phone number here
+    imageUrl : String,
+   active : Boolean
+});
 module.exports = mongoose.model('user',user);
