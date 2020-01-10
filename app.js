@@ -52,16 +52,28 @@ app.get('/fail',(req,res)=>{
 });
 
 app.post('/signup',(req,res)=>{
-    user.create({
-        chaappId:req.body.chaappId,
-        email:req.body.email,
-        authId:req.body.authId,
-        imageUrl: req.body.imageUrl,
-        active:true
-    },function(err,dbres){
-        if(err)res.json({status:0 , res:err});
-        else res.json({status: 1, res:dbres});
+    //existing
+    user.find({authId:req.body.authId},function(err,dbres){
+        if(err)res.json({status:0,res:err});
+        else if (dbres.length==0){
+            //create new
+            user.create({
+                chaappId:req.body.chaappId,
+                email:req.body.email,
+                authId:req.body.authId,
+                imageUrl: req.body.imageUrl,
+                active:true
+            },function(err,dbres2){
+                if(err)res.json({status:0 , res:err});
+                else res.json({status: 1, res:dbres2});
+            });
+        }
+        //return existing
+        else {
+            res.json({status: 1, res:dbres[0]});
+        }
     });
+    
 });
 
 ///change chaappId
@@ -87,6 +99,6 @@ app.post('/checkName',(req,res)=>{
     });
 });
 
-app.listen(3389,()=>{
+app.listen(2222,()=>{
     console.log('i am running');
 });
