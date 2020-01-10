@@ -99,6 +99,6 @@ app.post('/checkName',(req,res)=>{
     });
 });
 
-app.listen(2222,()=>{
+app.listen(3389,()=>{
     console.log('i am running');
 });
