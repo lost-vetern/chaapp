@@ -2,12 +2,22 @@ var express = require('express'),
     mongoose = require('mongoose'),
     bodyParser = require('body-parser'),
     user = require('./user'),
-    server = require('http').createServer(),
-    socket = require('socket.io'),
-    io = socket(server);
+    app = express()
+    // server = require('http').createServer(app),
+    // io = require('socket.io')(server);
+;
 
-var app = express();
-//view 
+
+const server = require('http').createServer();
+const io = require('socket.io')(server);
+io.on('connection', client => {
+  client.on('event', data => { /* … */ });
+  client.on('disconnect', () => { /* … */ });
+});
+server.listen(3000);
+
+
+    //view 
 app.set('view engine','ejs');
 //body parsing
 app.use(bodyParser.urlencoded({extended : true}));
@@ -23,21 +33,19 @@ app.use(function(req, res, next) {
     next();
   });
 
-var clients;
+var clients=[];
 
 ////////////sockets  
 io.on('connection', (socket)=>{
-    console.log('user connected'+socket.id);
     //disconnect
     socket.on('disconnect', function(){
         delete clients[socket.nickname];
-        console.log('user disconnected');
       });
       ///add user
       socket.on('add-user', function(data){
-            socket.nickname = data.username;
+        socket.nickname = data.username;
             clients[data.username]=socket.id;
-            console.log(clients[data.username]);
+
         });
     /*
     {from, to, msg}
@@ -49,6 +57,14 @@ io.on('connection', (socket)=>{
 
 app.get('/fail',(req,res)=>{
     res.json({'user':'0'});
+});
+
+app.post('/setChaappId',(req,res)=>{
+    user.updateOne({authId:req.body.authId},{chaappId:req.body.chaappId},function(err,dbres){
+        if(err)res.json({status:0,res:err});
+        else {
+            res.json({status:1,res:dbres});}
+    });
 });
 
 app.post('/signup',(req,res)=>{
@@ -65,12 +81,12 @@ app.post('/signup',(req,res)=>{
                 active:true
             },function(err,dbres2){
                 if(err)res.json({status:0 , res:err});
-                else res.json({status: 1, res:dbres2});
+                else res.json({status: 1, res:dbres2,idExists:0});
             });
         }
         //return existing
         else {
-            res.json({status: 1, res:dbres[0]});
+            res.json({status: 1, res:dbres[0],idExists:1});
         }
     });
     
@@ -90,15 +106,15 @@ app.get('/check',(req,res)=>{
 });
 
 app.post('/checkName',(req,res)=>{
-    user.find({username:req.body.username},function(err,dbres){
-        if(err)res.json({'status':0});
+    user.find({chaappId:req.body.username},function(err,dbres){
+        if(err)res.json({status:0});
         else{
-            if(dbres.length==0){res.json({'status':1});}
-            else res.json({'status':0});
+            if(dbres.length==0){res.json({status:0});}
+            else res.json({status:1,online:clients.includes(req.body.username)});
         }
     });
 });
 
-app.listen(3389,()=>{
+app.listen(2000,()=>{
     console.log('i am running');
 });
